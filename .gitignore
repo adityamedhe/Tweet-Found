@@ -1,5 +1,5 @@
 bin/
 include/
 lib/
-lib64/
-./pyenv.cfg
+lib64
+pyenv.cfg
