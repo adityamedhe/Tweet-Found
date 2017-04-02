@@ -1,0 +1,4 @@
+imgurpython
+mongoengine
+TwitterAPI
+Flask
