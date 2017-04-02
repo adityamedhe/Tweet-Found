@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{%block main%}
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    Oops
+                </div>
+                <div class="panel-body">
+                    {%if status==400%}
+                        Looks like you did some mistake while submitting the form. Please try again!<br>
+                        Error message: {{message}}
+                    {%elif status==500%}
+                        There was an error processing your request. Please try again later.
+                        Error message: {{message}}
+                    {%endif%}
+                </div>
+            </div>
+        </div>
+    </div>
+{%endblock%}

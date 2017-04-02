@@ -24,15 +24,16 @@ connect ("tweet_found_db", host="mongodb://ds143990.mlab.com", port=43990, usern
 # }
 
 class Location(EmbeddedDocument):
-    lat = DecimalField(precision=3, rounding='ROUND_HALF_UP', required=True)
-    lng = DecimalField(precision=3, rounding='ROUND_HALF_UP', required=True)
+    lat = DecimalField(precision=5, rounding='ROUND_HALF_UP', required=True)
+    lng = DecimalField(precision=5, rounding='ROUND_HALF_UP', required=True)
 
 class Tweet(EmbeddedDocument):
     tweet_id = StringField(required=True)
     timestamp = StringField(required=True)
     
 class Case(Document):
-    author = StringField(required=True)
+    author = StringField(required=True, max_length=15)
+    time = StringField(required=True)
     object_lost = StringField(required=True, max_length=15)
     case_is_open = BooleanField(required=True)
     details = StringField(required=True)

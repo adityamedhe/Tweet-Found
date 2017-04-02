@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block main %}
+<h2 align="center">
+    What do you want to do?
+</h2>
+<br><br>
+<div class="row">
+    <div class="col-xs-12 col-md-6">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                Tweet a new incident
+            </div>
+            <div class="panel-body">
+                Your pet / vehicle / any valuable object went missing? We can help you by contacting all the users who tweeted from the area of the incident recently. <hr/>
+                <button id="btn-new" class="btn btn-success">
+                    Create a new case
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-xs-12 col-md-6">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                Track an existing incident
+            </div>
+            <div class="panel-body">
+                Check the status / tweet more users regarding an existing case you have already opened.<br/><hr>
+                <div class="input-group">
+                    <input class="form-control" type="text" id="inp-id"/>
+                    <div class="input-group-btn">
+                        <button id="btn-track" class="btn btn-success">Track</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="/static/scripts/index.js"></script>
+{% endblock %}

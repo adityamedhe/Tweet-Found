@@ -1,12 +1,13 @@
 # library dependencies 
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request, make_response, send_file, render_template, url_for, redirect
 from imgurpython import ImgurClient
 from werkzeug.utils import secure_filename
 from bson import json_util
 from TwitterAPI import TwitterAPI
 from datetime import datetime
+from urllib.parse import urlparse
+ 
 import time
-
 import os
 import json
 
@@ -21,6 +22,8 @@ api = TwitterAPI("mwNDCa39VSwGKvmldUz5wufaF",
 
 app = Flask(__name__)
 
+#############################################################
+# API routes
 @app.route("/case", methods=["POST"])
 def putCase():
     """ 
@@ -38,15 +41,22 @@ def putCase():
     """
     try:
         # get all the mandatory fields
+        for field in request.form:
+            # print ("{}: {}".format(v, request.form[v]))
+            if request.form[field].strip() == "":
+                raise ValidationError("{} is a required field".format(field))
+        
         case = Case(author=request.form.get("author", None), case_is_open=True, object_lost=request.form.get("object_lost", None), details=request.form.get("details", None))
         case.location = Location(lat=request.form.get("lat", None), lng=request.form.get("lng", None))
+        case.time = datetime.now().strftime("%c")
         case.tweets = []
         
         new_id = str(case.save().pk)
         
         # check if file upload present. If yes, POST
         # the same to Imgur via API
-        if "image" in request.files:
+        
+        if "image" in request.files and request.files["image"].filename != "":
             file = request.files["image"]
             path = os.path.join(os.getcwd(), "uploads/", file.filename)
             file.save(path)
@@ -59,15 +69,27 @@ def putCase():
             
             case.image = image['link']
             case.save()
+        else:
+            case.image = "none"
+            case.save()
     except (TypeError, ValidationError) as e:
-        return make_response(jsonify({'status': 400, 'message': e.message}), 400)
+        if request.is_xhr:
+            return make_response(jsonify({'status': 400, 'message': e}), 400)
+        else: 
+            return render_template("error.html", message=e, status=400)
     except Exception as e:
-        print("Exception:", e)
-        return make_response(jsonify({'status': 500}), 500)
+        if request.is_xhr:
+            return make_response(jsonify({'status': 500}), 500)
+        else:
+            print(e)
+            return render_template("error.html", message=e, status=500)
     else:
-        return make_response(jsonify({'status': 200,  'new_id': new_id, 'image_link': case.image}), 200)
+        if request.is_xhr:
+            return make_response(jsonify({'status': 200,  'new_id': new_id, 'image_link': case.image}), 200)
+        else:
+            return redirect(url_for("getCase", id=new_id))
 
-@app.route("/case/<id>/", methods=["GET"])
+@app.route("/case/<id>/", methods=["GET", "HEAD"])
 def getCase(id):
     """
         This route returns the document of the case with given id 
@@ -83,13 +105,35 @@ def getCase(id):
     try:
         case = Case.objects(pk=id).as_pymongo()
         if len(case) == 0:
-            return make_response(jsonify({'status': 404}), 404)
+            if request.is_xhr:
+                return make_response(jsonify({'status': 404}), 404)
+            else:
+                return render_template("case.html", status=404)
+                
     except (TypeError, ValidationError) as e:
-        return make_response(jsonify({'status': 400}), 400)
+        if request.is_xhr:
+            return make_response(jsonify({'status': 400}), 400)
+        else:
+            return render_template("case.html", status=400)
+            
     except Exception as e:
-        return make_response(jsonify({'status': 500}), 500)
+        if request.is_xhr:
+            return make_response(jsonify({'status': 500}), 500)
+        else:
+            return render_template("case.html", status=500)
+        
     else:
-        return make_response(json_util.dumps({'status': 200, 'case': case[0]}))
+        if request.is_xhr:
+            return make_response(json_util.dumps({'status': 200, 'case': case[0]}))
+        else:
+            # get oEmbed markup for each tweet
+            tweets_html = []
+            for tweet in case[0]['tweets']:
+                r = api.request('statuses/oembed', {'url':'https://twitter.com/adityamedhe/status/{}'.format(tweet['tweet_id']), 'omit_script':'true', 'theme':'light'})
+                if 'html' in r.json():
+                    tweets_html.append(r.json()['html'])
+                
+            return render_template("case.html", id=id, tweets_html=tweets_html, case=case[0], status=200)
 
 @app.route("/case/<id>/close", methods=["POST"])
 def closeCase(id):
@@ -159,12 +203,16 @@ def tweet(id):
                 
             # form the new tweets. this function returns an array of tweets with
             # enough tweets required to mention all of the users in the vicinity
-            tweets_to_post = form_tweet([i['user']['screen_name'] for i in r.get_iterator()], "Help! site/{}. A missing incident has been reported in your area. Can you help?".format(case.pk))
+            
+            # get the current domain name
+            link = urlparse(request.url).netloc + url_for('getCase', id=id)
+            print(link)
+            tweets_to_post = form_tweet([i['user']['screen_name'] for i in r.get_iterator()], "{}'s {} went missing in your area. Can you help? Visit {}".format(case['author'], case['object_lost'], link), len(link))
 
             # post each tweet, also add to case record
-            # for tweet in tweets_to_post:
-                # r = api.request('statuses/update', {'status': tweet})
-                # case['tweets'].append(Tweet(tweet_id=r.json()['id_str'], timestamp=str(time.time())))
+            for tweet in tweets_to_post:
+                r = api.request('statuses/update', {'status': tweet})
+                case['tweets'].append(Tweet(tweet_id=r.json()['id_str'], timestamp=str(time.time())))
                 
             # save the case and respond OK
             case.save()
@@ -177,7 +225,7 @@ def tweet(id):
     except Exception as e:
         return make_response(jsonify({'status': 500}), 500)
 
-def form_tweet(users, message):
+def form_tweet(users, message, link_len):
     user_set = set()
     tweets = []
     
@@ -189,7 +237,7 @@ def form_tweet(users, message):
     tweet = "" + message + " "
     
     # available_length = max tweet length - initial message length
-    available_length = 140 - len(message) - 5
+    available_length = 140 - len(message) + link_len - 23 - 5
     
     # while every user is not added to the tweets
     while len(user_set) > 0:
@@ -197,7 +245,7 @@ def form_tweet(users, message):
         u = user_set.pop()
         if available_length >= len(u):
             # if there is enough space available in tweet, add the user
-            tweet += "@" + u + " "
+            tweet += "" + u + " " #add @ here to mention users
 
             # adjust the available length
             available_length -= (len(u) + 1)
@@ -210,7 +258,7 @@ def form_tweet(users, message):
             
             # prepare new tweet with only initial message
             tweet = "" + message + " "
-            available_length = 140 - len(message) - 5
+            available_length = 140 - len(message) + link_len - 23 - 5
     
     # if only tweet formed, which is less than max length, add that one
     if len(tweets) == 0:
@@ -218,4 +266,16 @@ def form_tweet(users, message):
     
     return tweets
     
+##############################################################
+# Frontend routes
+@app.route("/", methods=["GET"])
+def index_page():
+    return render_template ("index.html")
+    
+@app.route("/new_case", methods=["GET"])
+def new_case_page():
+    return render_template ("new_case.html")
+##############################################################
+
+
 app.run(port=8080, host="0.0.0.0", debug=True)

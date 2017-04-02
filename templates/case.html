@@ -1,0 +1,131 @@
+{%extends "layout.html"%}
+
+{%block head%}
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAf4B488Fme6FZV-1ky_mrLbGj82ndrO-A">
+</script>
+
+<!--Twitter Widget JavaScript - required to display tweets on webpage -->
+<script>
+    window.twttr = (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0],
+        t = window.twttr || {};
+      if (d.getElementById(id)) return t;
+      js = d.createElement(s);
+      js.id = id;
+      js.src = "https://platform.twitter.com/widgets.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    
+      t._e = [];
+      t.ready = function(f) {
+        t._e.push(f);
+      };
+    
+      return t;
+    }(document, "script", "twitter-wjs"));
+</script>
+
+<style type="text/css">
+    #map {
+        width: 100%;
+        height: 400px;
+    }
+</style>
+
+{%endblock%}
+
+{%block main%}
+
+    {% if status != 200 %}
+        <div class="panel panel-danger">
+            <div class="panel-heading">
+                Something is wrong
+            </div>
+            <div class="panel-body">
+                {% if status == 404 %}
+                    The case you are looking for cannot be found
+                {% elif status == 400 %}
+                    There was an error while finding your case. Please check your case ID again
+                {% elif status == 500 %}
+                    There was an internal error while processing your request
+                {% endif %}
+            </div>
+        </div>
+    {%else%}
+        <div class="row">
+            <div class="col-xs-12">
+                <h2>Missing: {{case.author}}'s {{case.object_lost}}</h2>
+                <h6>Case created: {{case.time}}</h6>
+                
+                <div class="alert alert-success">
+                    <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
+                    <b>Remember this case URL to check the status in future:</b><br>
+                    <a href="{{request.url}}">{{request.url}}</a>
+                </div>
+            </div>
+            
+            <div class="col-xs-12">
+                <div class="panel panel-info">
+                    <div class="panel-heading">Location</div>
+                        <div id="map" style="width:100%; height:400px;">
+                        </div>
+                </div>
+            </div>
+            
+            <div class="col-xs-12 col-md-6">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        Case Info
+                    </div>
+                    <div class="panel-body">
+                        {% if case.image != "none" %}
+                            <img src="{{case.image}}" style="width:100%">
+                            <hr>
+                        {% endif %}
+                        <blockquote>
+                            {{case.details}}
+                        </blockquote>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-12 col-md-6">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        Tweets
+                    </div>
+                    <div class="panel-body" align="center">
+                        <h1>{{(case.tweets) | length}}</h1>
+                        Tweets sent so far
+                        <hr/>
+                        <button id="btn-tweet" class="btn btn-info btn-lg btn-block">
+                            <img src="http://www.igacproject.org/sites/all/themes/bluemasters/images/Twitter-256.png" height="50"></img> &nbsp;
+                            Send tweets to users nearby
+                        </button>
+                        <div id="status" class="alert alert-warning" style="display:none;">
+                            
+                        </div>
+                        {% if case.tweets|length  == 0 %}
+                            <br>
+                            <span>
+                                You've not sent any tweets till yet! Click this button to find the users nearby and tweet to them
+                            </span>
+                        {%endif%}
+                        <hr/>
+                        
+                        <div style="max-height:500px; overflow-y:auto;">
+                            {% for tweet in tweets_html %}
+                                {{tweet|safe}}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {%endif%}
+    
+    <script type="text/javascript" src="/static/scripts/case.js"></script>
+    
+    <script>
+        var id = "{{id}}";
+        initMap({{case.location.lat}}, {{case.location.lng}});
+    </script>
+{%endblock%}
