@@ -278,4 +278,4 @@ def new_case_page():
 ##############################################################
 
 
-app.run(port=8080, host="0.0.0.0", debug=True)
+app.run(port=os.environ.get("PORT", 5000), host="0.0.0.0", debug=True)
