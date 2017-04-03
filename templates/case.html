@@ -120,12 +120,13 @@
                 </div>
             </div>
         </div>
+    
+        <script type="text/javascript" src="/static/scripts/case.js"></script>
+        
+        <script>
+            var id = "{{id}}";
+            initMap({{case.location.lat}}, {{case.location.lng}});
+        </script>
+    
     {%endif%}
-    
-    <script type="text/javascript" src="/static/scripts/case.js"></script>
-    
-    <script>
-        var id = "{{id}}";
-        initMap({{case.location.lat}}, {{case.location.lng}});
-    </script>
 {%endblock%}

@@ -104,7 +104,23 @@ def getCase(id):
     
     try:
         case = Case.objects(pk=id).as_pymongo()
+        
         if len(case) == 0:
+            raise IndexError("IndexError")
+            
+        if request.is_xhr:
+            return make_response(json_util.dumps({'status': 200, 'case': case[0]}))
+        else:
+            # get oEmbed markup for each tweet
+            tweets_html = []
+            for tweet in case[0]['tweets']:
+                r = api.request('statuses/oembed', {'url':'https://twitter.com/adityamedhe/status/{}'.format(tweet['tweet_id']), 'omit_script':'true', 'theme':'light'})
+                if 'html' in r.json():
+                    tweets_html.append(r.json()['html'])
+                
+            return render_template("case.html", id=id, tweets_html=tweets_html, case=case[0], status=200)
+            
+    except IndexError as e:
             if request.is_xhr:
                 return make_response(jsonify({'status': 404}), 404)
             else:
@@ -121,19 +137,6 @@ def getCase(id):
             return make_response(jsonify({'status': 500}), 500)
         else:
             return render_template("case.html", status=500)
-        
-    else:
-        if request.is_xhr:
-            return make_response(json_util.dumps({'status': 200, 'case': case[0]}))
-        else:
-            # get oEmbed markup for each tweet
-            tweets_html = []
-            for tweet in case[0]['tweets']:
-                r = api.request('statuses/oembed', {'url':'https://twitter.com/adityamedhe/status/{}'.format(tweet['tweet_id']), 'omit_script':'true', 'theme':'light'})
-                if 'html' in r.json():
-                    tweets_html.append(r.json()['html'])
-                
-            return render_template("case.html", id=id, tweets_html=tweets_html, case=case[0], status=200)
 
 @app.route("/case/<id>/close", methods=["POST"])
 def closeCase(id):
