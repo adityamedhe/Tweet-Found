@@ -2,15 +2,17 @@ IMGUR
 client id f0d09803da5a191
 client secret 6be459994de860dfcaac69268b00078fdf82f382
 
-TWITTER
-mwNDCa39VSwGKvmldUz5wufaF
-4nH73L1VCuTrV8ByCiNNVTCrSoo9QAf79L6AYDo8pfhf9HK8tR
-227958848-UxJ7vhdl1DJW1LOq6c1BIrayxBdu2AwtvEar5x1B
-OAXnOgVux5VpRlq58C1SIglDr9QLdlz9gfYVOqDC4f1b4
+TWITTER API
+Consumer Key (API Key)	LGGyfVM35xKmuCoNoAHnfmIyG
+Consumer Secret (API Secret)	Ko948qbUOxdJKeGiCJZVjTLiUeZMwLAa9MJQMd5M4VR19CzLLs
+Access Token	849130450144575488-qnTJPHZWmYSHLtUNEaTQRPmwhPF98VO
+Access Token Secret	rZEsz4oQOt5d6zvl2oo1JTF2DBolrfNFdeTltV1QB1tED
 
 GMAIL
 tweet.found@gmail.com
 <same as personal gmail>
 
-PythonAnywhere
+TWITTER ACCOUNT
+tweet_found
+R1seandshine
 

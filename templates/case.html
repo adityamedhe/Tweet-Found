@@ -56,7 +56,7 @@
                 <h2>Missing: {{case.author}}'s {{case.object_lost}}</h2>
                 <h6>Case created: {{case.time}}</h6>
                 
-                <div class="alert alert-success">
+                <div class="alert alert-success" style="word-break:break-word;">
                     <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
                     <b>Remember this case URL to check the status in future:</b><br>
                     <a href="{{request.url}}">{{request.url}}</a>
@@ -96,7 +96,7 @@
                         <h1>{{(case.tweets) | length}}</h1>
                         Tweets sent so far
                         <hr/>
-                        <button id="btn-tweet" class="btn btn-info btn-lg btn-block">
+                        <button id="btn-tweet" class="btn btn-info btn-lg btn-block" style="white-space: normal;">
                             <img src="http://www.igacproject.org/sites/all/themes/bluemasters/images/Twitter-256.png" height="50"></img> &nbsp;
                             Send tweets to users nearby
                         </button>

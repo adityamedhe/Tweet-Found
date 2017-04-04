@@ -15,10 +15,10 @@ import json
 from models.Case import *
 
 # configuring Twitter API
-api = TwitterAPI("mwNDCa39VSwGKvmldUz5wufaF",
-                 "4nH73L1VCuTrV8ByCiNNVTCrSoo9QAf79L6AYDo8pfhf9HK8tR",
-                 "227958848-UxJ7vhdl1DJW1LOq6c1BIrayxBdu2AwtvEar5x1B",
-                 "OAXnOgVux5VpRlq58C1SIglDr9QLdlz9gfYVOqDC4f1b4")
+api = TwitterAPI("LGGyfVM35xKmuCoNoAHnfmIyG",
+                 "Ko948qbUOxdJKeGiCJZVjTLiUeZMwLAa9MJQMd5M4VR19CzLLs",
+                 "849130450144575488-qnTJPHZWmYSHLtUNEaTQRPmwhPF98VO",
+                 "rZEsz4oQOt5d6zvl2oo1JTF2DBolrfNFdeTltV1QB1tED")
 
 app = Flask(__name__)
 
@@ -101,7 +101,9 @@ def getCase(id):
             HTTP 404 if document not found
             HTTP 500 if any server internal exception
     """
-    
+    if request.method == "HEAD":
+        return make_response(json_util.dumps({'status': 200}), 200)
+
     try:
         case = Case.objects(pk=id).as_pymongo()
         
@@ -109,7 +111,7 @@ def getCase(id):
             raise IndexError("IndexError")
             
         if request.is_xhr:
-            return make_response(json_util.dumps({'status': 200, 'case': case[0]}))
+            return make_response(json_util.dumps({'status': 200, 'case': case[0]}), 200)
         else:
             # get oEmbed markup for each tweet
             tweets_html = []
